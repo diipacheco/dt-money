@@ -1,5 +1,6 @@
 import { MagnifyingGlass } from "phosphor-react";
-import { Container } from "./styled";
+
+import { Container } from "./styles";
 
 export function Search() {
   return (
