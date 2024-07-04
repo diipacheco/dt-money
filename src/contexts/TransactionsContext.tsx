@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useContext, createContext, useEffect, useState } from "react";
+import { useFetch } from "../hooks/useFetch";
 
 export interface Transaction {
   id: number;
@@ -10,9 +11,17 @@ export interface Transaction {
   createdAt: string;
 }
 
+interface NewTransactionData {
+  description: string;
+  type: "income" | "outcome";
+  category: string;
+  price: number;
+}
+
 interface TransactionsContextType {
   transactions: Transaction[];
   fetchTransactions: (query?: string) => Promise<void>;
+  createNewTransaction: (newTransactionData: NewTransactionData) => void;
 }
 
 export const TransactionsContext = createContext({} as TransactionsContextType);
@@ -26,15 +35,35 @@ export function TransactionsContextProvider({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   async function fetchTransactions(query?: string) {
-    const url = new URL("http://localhost:3333/transactions");
+    const data = await useFetch({ method: "GET" });
 
-    if (query) {
-      url.searchParams.append("q", query);
+    if (query && query.length >= 1) {
+      const queryTransactions = data.filter((transactions: Transaction) =>
+        transactions.description
+          .toLocaleLowerCase()
+          .includes(query.toLocaleLowerCase())
+      );
+      setTransactions(queryTransactions);
+    } else {
+      setTransactions(data);
     }
+  }
 
-    const response = await fetch(url);
-    const data = await response.json();
-    setTransactions(data);
+  async function createNewTransaction(newTransactionData: NewTransactionData) {
+    const { category, description, price, type } = newTransactionData;
+
+    const data = await useFetch({
+      method: "POST",
+      data: {
+        description,
+        type,
+        category,
+        price,
+        createdAt: new Date().toISOString(),
+      },
+    });
+
+    setTransactions((state) => [data, ...state]);
   }
 
   useEffect(() => {
@@ -46,6 +75,7 @@ export function TransactionsContextProvider({
       value={{
         transactions,
         fetchTransactions,
+        createNewTransaction,
       }}
     >
       {children}
