@@ -1,6 +1,8 @@
+import { useContextSelector } from "use-context-selector";
+
 import { Header } from "../../components/Header";
 import { Summary } from "../../components/Summary";
-import { useTransactions } from "../../contexts/TransactionsContext";
+import { TransactionsContext } from "../../contexts/TransactionsContext";
 import { dateFormatter, priceFormatter } from "../../utils/formatter";
 
 import { Search } from "./components/Search";
@@ -8,7 +10,10 @@ import { Search } from "./components/Search";
 import { Container, TransactionsPrice, TransactionsTable } from "./styles";
 
 export function Transactions() {
-  const { transactions } = useTransactions();
+  const transactions = useContextSelector(
+    TransactionsContext,
+    (context) => context.transactions
+  );
   return (
     <>
       <Header />

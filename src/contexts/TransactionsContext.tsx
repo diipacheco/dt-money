@@ -1,5 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useContext, createContext, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { createContext } from "use-context-selector";
+
 import { useFetch } from "../hooks/useFetch";
 
 export interface Transaction {
@@ -34,7 +36,7 @@ export function TransactionsContextProvider({
 }: TransactionsContextProviderProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  async function fetchTransactions(query?: string) {
+  const fetchTransactions = useCallback(async (query?: string) => {
     const data = await useFetch({ method: "GET" });
 
     if (query && query.length >= 1) {
@@ -47,28 +49,31 @@ export function TransactionsContextProvider({
     } else {
       setTransactions(data);
     }
-  }
+  }, []);
 
-  async function createNewTransaction(newTransactionData: NewTransactionData) {
-    const { category, description, price, type } = newTransactionData;
+  const createNewTransaction = useCallback(
+    async (newTransactionData: NewTransactionData) => {
+      const { category, description, price, type } = newTransactionData;
 
-    const data = await useFetch({
-      method: "POST",
-      data: {
-        description,
-        type,
-        category,
-        price,
-        createdAt: new Date().toISOString(),
-      },
-    });
+      const data = await useFetch({
+        method: "POST",
+        data: {
+          description,
+          type,
+          category,
+          price,
+          createdAt: new Date().toISOString(),
+        },
+      });
 
-    setTransactions((state) => [data, ...state]);
-  }
+      setTransactions((state) => [data, ...state]);
+    },
+    []
+  );
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
 
   return (
     <TransactionsContext.Provider
@@ -81,9 +86,4 @@ export function TransactionsContextProvider({
       {children}
     </TransactionsContext.Provider>
   );
-}
-
-export function useTransactions() {
-  const context = useContext(TransactionsContext);
-  return context;
 }
